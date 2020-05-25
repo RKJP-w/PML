@@ -1,0 +1,68 @@
+---
+title: "PML_FINAL"
+author: "RINTO KON"
+date: "5/25/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+rm(list=ls(all=TRUE))
+getwd()
+library(caret)
+library(randomForest)
+
+URL1 <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+URL2 <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+file1 <- "training.csv"
+file2 <- "testing.csv"
+download.file(url=URL1, destfile=file1,method="curl")
+download.file(url=URL2, destfile=file2,method="curl")
+training <- read.csv("training.csv",row.names=1,na.strings = "")
+testing <- read.csv("testing.csv",row.names=1,na.strings = "NA")
+
+
+inTrain <- createDataPartition(y=training$classe, p=0.7, list=FALSE)
+training<- training[inTrain,]
+testing<- training[-inTrain,]
+
+NZV <- nearZeroVar(training)
+training <- training[, -NZV]
+testing  <- testing[, -NZV]
+dim(testing)
+
+AllNA    <- sapply(training, function(x) mean(is.na(x))) > 0.95
+training <- training[, AllNA==FALSE]
+testing  <- testing[, AllNA==FALSE]
+
+training <- training[, -(1:5)]
+testing  <- testing[, -(1:5)]
+
+set.seed(1234)
+
+rfFit <- train(classe ~ ., method = "rf", data = training,prox=TRUE)
+rfFit
+
+pred <- predict(rfFit, newdata=testing)
+table(pred,testing$classe)
+conf <- confusionMatrix(pred, testing$classe)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
